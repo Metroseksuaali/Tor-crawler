@@ -8,8 +8,10 @@ services:
     restart: unless-stopped
     networks:
       - tor-network
-    ports:
-      - "9050:9050"  # SOCKS proxy (optional, for debugging)
+    # Ports not needed - crawler uses internal Docker network
+    # Uncomment below if you want to use Tor from host machine (may cause permission errors on Windows)
+    # ports:
+    #   - "9050:9050"
     environment:
       - TOR_MaxCircuitDirtiness=60
     healthcheck:
