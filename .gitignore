@@ -26,16 +26,20 @@ env/
 ENV/
 .venv
 
-# Data (crawlattu sisältö)
+# Data (crawled content)
 data/
 *.json
 *.db
 *.sqlite
 *.sqlite3
 
-# Konfiguraatio (saattaa sisältää arkaluonteista dataa)
+# Configuration (may contain sensitive data)
 .env
 config.yaml
+
+# Docker
+docker-compose.override.yaml
+.dockerignore.local
 
 # IDE
 .vscode/
@@ -50,3 +54,8 @@ config.yaml
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp

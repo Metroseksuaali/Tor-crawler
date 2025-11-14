@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Tor proxy service
+  tor:
+    image: dperson/torproxy:latest
+    container_name: tor-proxy
+    restart: unless-stopped
+    networks:
+      - tor-network
+    ports:
+      - "9050:9050"  # SOCKS proxy (optional, for debugging)
+    environment:
+      - TOR_MaxCircuitDirtiness=60
+    healthcheck:
+      test: ["CMD", "curl", "--socks5-hostname", "localhost:9050", "https://check.torproject.org/api/ip"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Tor Crawler service
+  crawler:
+    build: .
+    container_name: tor-crawler
+    depends_on:
+      tor:
+        condition: service_healthy
+    networks:
+      - tor-network
+    volumes:
+      # Mount data directory to host (DATA AUTO-SYNCS HERE!)
+      - ./data:/app/data
+      # Mount config file (optional, allows editing without rebuild)
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      # Override Tor proxy to use tor service
+      - TOR_PROXY_HOST=tor
+      - TOR_PROXY_PORT=9050
+      # Optional: override other settings via environment
+      # - START_URL=http://example.onion
+      # - MAX_PAGES=100
+      # - MAX_DEPTH=3
+      # - LOG_LEVEL=INFO
+    command: --config config.yaml
+    # Uncomment to run in interactive mode
+    # stdin_open: true
+    # tty: true
+
+networks:
+  tor-network:
+    driver: bridge

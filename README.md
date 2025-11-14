@@ -13,7 +13,11 @@
 - [Technology Choice](#-technology-choice)
 - [Prerequisites](#-prerequisites)
 - [Installation](#-installation)
+  - [Docker Installation (Recommended)](#docker-installation-recommended)
+  - [Manual Installation](#manual-installation)
 - [Usage](#-usage)
+  - [Docker Usage](#docker-usage)
+  - [Manual Usage](#manual-usage)
 - [Configuration](#-configuration)
 - [Data Processing](#-data-processing)
 - [Architecture](#-architecture)
@@ -99,13 +103,73 @@ Should return: `{"IsTor": true, ...}`
 
 ## 📦 Installation
 
-### 1. Clone repository
+### Docker Installation (Recommended) 🐳
+
+**Easiest way to get started!** Everything is containerized and data automatically syncs to your computer.
+
+#### Prerequisites
+- Docker and Docker Compose installed
+- That's it! No Python or Tor installation needed.
+
+#### Quick Start
+
+1. **Clone repository**
 ```bash
 git clone <repository-url>
 cd Tor-crawler
 ```
 
-### 2. Create virtual environment (recommended)
+2. **Configure crawler**
+```bash
+cp config.example.yaml config.yaml
+# Edit config.yaml and set your start_url
+nano config.yaml  # or use your favorite editor
+```
+
+3. **Start crawling!**
+```bash
+docker-compose up
+```
+
+That's it! The crawler will:
+- ✅ Automatically start Tor proxy
+- ✅ Wait for Tor to be ready
+- ✅ Start crawling
+- ✅ **Save data to `./data/` folder on your computer (auto-syncs!)**
+
+#### Stopping
+```bash
+# Press Ctrl+C to stop
+# Or in another terminal:
+docker-compose down
+```
+
+#### Viewing Data
+Data is automatically saved to `./data/` folder on your host machine:
+```bash
+# View crawled pages
+cat data/crawled_pages.json
+
+# Or with jq for pretty output
+cat data/crawled_pages.json | jq .
+
+# SQLite database
+sqlite3 data/crawler.db "SELECT url, title FROM pages LIMIT 10;"
+```
+
+---
+
+### Manual Installation
+
+If you prefer not to use Docker:
+
+#### 1. Clone repository
+```bash
+git clone <repository-url>
+cd Tor-crawler
+```
+
+#### 2. Create virtual environment (recommended)
 ```bash
 python3 -m venv venv
 source venv/bin/activate  # Linux/macOS
@@ -113,12 +177,15 @@ source venv/bin/activate  # Linux/macOS
 venv\Scripts\activate  # Windows
 ```
 
-### 3. Install dependencies
+#### 3. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure crawler
+#### 4. Install and start Tor
+See [Prerequisites](#-prerequisites) section for Tor installation.
+
+#### 5. Configure crawler
 
 Copy example configuration:
 ```bash
@@ -138,13 +205,61 @@ crawler:
 
 ## 🚀 Usage
 
-### Basic command
+### Docker Usage
+
+#### Basic crawling
+```bash
+# Start crawling (Tor + Crawler)
+docker-compose up
+
+# Run in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f crawler
+
+# Stop
+docker-compose down
+```
+
+#### Override settings via environment variables
+```bash
+# Quick crawl with custom settings
+docker-compose run --rm crawler \
+  --start-url "http://example.onion" \
+  --max-pages 10 \
+  --max-depth 1
+```
+
+#### Advanced: Custom configuration
+```bash
+# Edit docker-compose.yaml to add environment variables
+services:
+  crawler:
+    environment:
+      - START_URL=http://example.onion
+      - MAX_PAGES=100
+      - MAX_DEPTH=3
+      - LOG_LEVEL=DEBUG
+```
+
+#### Rebuild after code changes
+```bash
+docker-compose build
+docker-compose up
+```
+
+---
+
+### Manual Usage
+
+#### Basic command
 
 ```bash
 python main.py --config config.yaml
 ```
 
-### Command line parameters
+#### Command line parameters
 
 ```bash
 # Use all settings from command line
@@ -160,7 +275,7 @@ python main.py --config config.yaml --delay 5.0
 python main.py --config config.yaml --log-level DEBUG
 ```
 
-### Example run
+#### Example run
 
 ```bash
 # Start with small test
@@ -172,7 +287,7 @@ python main.py \
   --storage json
 ```
 
-### Interruption and resuming
+#### Interruption and resuming
 
 You can interrupt crawling (`Ctrl+C`) and resume later:
 ```bash
@@ -354,7 +469,63 @@ src/
 
 ## 🐛 Troubleshooting
 
-### Error: "Could not establish Tor connection"
+### Docker Issues
+
+#### Docker: Containers won't start
+**Solution:**
+```bash
+# Check Docker is running
+docker ps
+
+# Check logs
+docker-compose logs
+
+# Restart everything
+docker-compose down
+docker-compose up
+```
+
+#### Docker: "Tor proxy not available"
+**Solution:**
+```bash
+# Check Tor container status
+docker-compose ps
+
+# View Tor logs
+docker-compose logs tor
+
+# Restart Tor container
+docker-compose restart tor
+```
+
+#### Docker: Data not appearing in ./data folder
+**Solution:**
+```bash
+# Check volume mount
+docker-compose config
+
+# Ensure data directory exists
+mkdir -p ./data
+
+# Check permissions
+ls -la ./data
+```
+
+#### Docker: Changes to code not reflected
+**Solution:**
+```bash
+# Rebuild the image
+docker-compose build --no-cache
+
+# Restart
+docker-compose up
+```
+
+---
+
+### Manual Installation Issues
+
+#### Error: "Could not establish Tor connection"
 
 **Cause:** Tor is not running or port is wrong.
 
@@ -370,7 +541,7 @@ curl --socks5-hostname 127.0.0.1:9050 https://check.torproject.org/api/ip
 # Check port in config.yaml (default 9050)
 ```
 
-### Error: "Configuration file not found"
+#### Error: "Configuration file not found"
 
 **Cause:** `config.yaml` is missing.
 
@@ -380,7 +551,7 @@ cp config.example.yaml config.yaml
 # Edit config.yaml and add start_url
 ```
 
-### Many timeout errors
+#### Many timeout errors
 
 **Cause:** .onion sites are slow or offline.
 
@@ -389,7 +560,7 @@ cp config.example.yaml config.yaml
 - Increase `max_retries` value (e.g. 5)
 - Check that site is actually reachable with Tor Browser
 
-### ImportError: No module named 'stem'
+#### ImportError: No module named 'stem'
 
 **Cause:** Dependencies not installed.
 
