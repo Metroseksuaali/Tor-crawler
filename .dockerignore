@@ -1,0 +1,54 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+dist
+build
+venv
+env
+ENV
+.venv
+
+# Data
+data/
+*.json
+*.db
+*.sqlite
+
+# Docker
+Dockerfile
+docker-compose.yaml
+.dockerignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+README.md
+*.md
+
+# Env files (use docker-compose env instead)
+.env
+
+# Example configs
+config.example.yaml
+.env.example
+
+# Temp files
+*.log
+tmp/
+temp/
