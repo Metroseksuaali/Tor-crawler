@@ -1,0 +1,41 @@
+# Tor Crawler - Esimerkkikonfiguraatio
+# Kopioi tämä config.yaml-nimellä ja muokkaa start_url-kenttää
+
+# Tor-yhteysasetukset
+tor:
+  proxy_host: "127.0.0.1"
+  proxy_port: 9050
+  control_port: 9051
+  control_password: null
+  use_stem: false
+
+# Crawlerin asetukset
+crawler:
+  # HUOM: Lisää tähän tutkittava .onion-osoite
+  start_url: "http://your-onion-site.onion"
+
+  max_depth: 2                  # Aloita pienellä syvyydellä
+  max_pages: 50                 # Aloita pienellä sivumäärällä
+  max_pages_per_domain: 25
+
+  # TÄRKEÄÄ: Älä poista rate limitingiä!
+  request_delay: 3.0            # 3 sekuntia pyyntöjen välillä
+
+  request_timeout: 30
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0"
+  follow_external_onion: false  # Älä seuraa muita domaineja (turvallisempi)
+  allowed_domains: []
+  max_retries: 3
+  obey_robots_txt: true
+
+# Tallennusasetukset
+storage:
+  storage_type: "json"          # Aloita JSON:lla (helpompi tutkia)
+  output_dir: "./data"
+  json_filename: "crawled_pages.json"
+  sqlite_filename: "crawler.db"
+  save_html_content: false
+  max_content_length: 500
+
+# Lokitaso
+log_level: "INFO"

@@ -1,0 +1,18 @@
+# Tor Crawler - Python-riippuvuudet
+
+# Asynkroninen HTTP-kirjasto
+aiohttp==3.9.1
+aiohttp-socks==0.8.4
+
+# HTML-parsinta
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# Konfiguraatio (YAML)
+PyYAML==6.0.1
+
+# Tor-kontrollointi (valinnainen, mutta suositeltu)
+stem==1.8.2
+
+# SOCKS-proxy-tuki
+PySocks==1.7.1
