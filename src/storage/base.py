@@ -1,5 +1,5 @@
 """
-Abstrakti tallennusluokka
+Abstract storage class
 """
 
 from abc import ABC, abstractmethod
@@ -8,21 +8,21 @@ from typing import Dict, Any, List
 
 class BaseStorage(ABC):
     """
-    Abstrakti perusluokka tallennusmoduuleille
+    Abstract base class for storage modules
     """
 
     @abstractmethod
     async def initialize(self):
-        """Alustaa tallennuksen (luo tiedostot/taulut)"""
+        """Initialize storage (create files/tables)"""
         pass
 
     @abstractmethod
     async def save_page(self, page_data: Dict[str, Any]):
         """
-        Tallentaa yhden sivun tiedot
+        Save single page data
 
         Args:
-            page_data: Dict sisältäen:
+            page_data: Dict containing:
                 - url: str
                 - status: int
                 - title: str
@@ -37,15 +37,15 @@ class BaseStorage(ABC):
 
     @abstractmethod
     async def get_visited_urls(self) -> set:
-        """Palauttaa kaikki käydyt URL:t"""
+        """Return all visited URLs"""
         pass
 
     @abstractmethod
     async def close(self):
-        """Sulkee tallennuksen"""
+        """Close storage"""
         pass
 
     @abstractmethod
     async def get_stats(self) -> Dict[str, Any]:
-        """Palauttaa tilastot (sivumäärä, virheet, jne.)"""
+        """Return statistics (page count, errors, etc.)"""
         pass

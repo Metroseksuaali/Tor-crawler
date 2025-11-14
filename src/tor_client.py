@@ -1,5 +1,5 @@
 """
-Tor-yhteyden hallinta ja SOCKS5-proxy-integraatio
+Tor connection management and SOCKS5 proxy integration
 """
 
 import aiohttp
@@ -21,7 +21,7 @@ from .utils import setup_logger
 
 class TorClient:
     """
-    Hallitsee Tor-yhteyden ja HTTP-pyynnöt SOCKS5-proxyn kautta
+    Manages Tor connection and HTTP requests via SOCKS5 proxy
     """
 
     def __init__(self, config: TorConfig, logger: Optional[logging.Logger] = None):
@@ -40,35 +40,35 @@ class TorClient:
         await self.close()
 
     async def initialize(self):
-        """Alustaa Tor-yhteyden ja HTTP-session"""
+        """Initialize Tor connection and HTTP session"""
         proxy_url = f"socks5://{self.config.proxy_host}:{self.config.proxy_port}"
 
-        self.logger.info(f"Alustetaan Tor-yhteys: {proxy_url}")
+        self.logger.info(f"Initializing Tor connection: {proxy_url}")
 
-        # Luo SOCKS5-proxy connector
+        # Create SOCKS5 proxy connector
         self._connector = ProxyConnector.from_url(proxy_url)
 
-        # Luo aiohttp session
+        # Create aiohttp session
         timeout = aiohttp.ClientTimeout(total=60, connect=30, sock_connect=30)
         self.session = aiohttp.ClientSession(
             connector=self._connector,
             timeout=timeout
         )
 
-        # Testaa yhteys
+        # Test connection
         try:
             await self._test_connection()
-            self.logger.info("✓ Tor-yhteys toimii")
+            self.logger.info("✓ Tor connection working")
         except Exception as e:
-            self.logger.error(f"✗ Tor-yhteyden testaus epäonnistui: {e}")
+            self.logger.error(f"✗ Tor connection test failed: {e}")
             raise ConnectionError(
-                f"Tor-yhteyttä ei voitu muodostaa. Varmista että Tor on käynnissä portissa {self.config.proxy_port}. "
-                f"Virhe: {e}"
+                f"Could not establish Tor connection. Ensure Tor is running on port {self.config.proxy_port}. "
+                f"Error: {e}"
             )
 
     async def _test_connection(self):
-        """Testaa Tor-yhteyden toimivuuden"""
-        # Yritä yksinkertainen pyyntö (voi epäonnistua jos ei nettiä, mutta tarkistaa proxyn)
+        """Test Tor connection functionality"""
+        # Try simple request (may fail if no internet, but checks proxy)
         try:
             async with self.session.get(
                 'https://check.torproject.org/api/ip',
@@ -77,14 +77,14 @@ class TorClient:
                 if response.status == 200:
                     data = await response.json()
                     if data.get('IsTor', False):
-                        self.logger.info(f"✓ Tor-yhteys vahvistettu. IP: {data.get('IP', 'unknown')}")
+                        self.logger.info(f"✓ Tor connection verified. IP: {data.get('IP', 'unknown')}")
                     else:
-                        self.logger.warning("⚠ Yhteys toimii, mutta ei Tor-verkon kautta!")
+                        self.logger.warning("⚠ Connection works but not through Tor network!")
         except asyncio.TimeoutError:
-            self.logger.warning("⚠ Tor-testaus aikakatkaisu (tämä voi olla normaalia Tor-verkossa)")
+            self.logger.warning("⚠ Tor test timeout (this can be normal on Tor network)")
         except Exception as e:
-            # Jos check.torproject.org ei vastaa, kokeillaan vain että proxy ottaa vastaan
-            self.logger.debug(f"Tor-testaus virhe (voi olla normaalia): {e}")
+            # If check.torproject.org doesn't respond, just verify proxy accepts connections
+            self.logger.debug(f"Tor test error (may be normal): {e}")
 
     async def fetch(
         self,
@@ -94,18 +94,18 @@ class TorClient:
         allow_redirects: bool = True
     ) -> Dict[str, Any]:
         """
-        Hakee sivun Tor-verkon kautta
+        Fetch page through Tor network
 
         Returns:
-            Dict sisältäen:
-                - url: str - lopullinen URL (redirectien jälkeen)
+            Dict containing:
+                - url: str - final URL (after redirects)
                 - status: int - HTTP status code
                 - headers: dict - response headers
-                - content: str - HTML-sisältö
-                - error: Optional[str] - virheviesti jos epäonnistui
+                - content: str - HTML content
+                - error: Optional[str] - error message if failed
         """
         if not self.session:
-            raise RuntimeError("TorClient ei ole alustettu. Käytä async with -kontekstia.")
+            raise RuntimeError("TorClient not initialized. Use async with context.")
 
         try:
             async with self.session.get(
@@ -113,13 +113,13 @@ class TorClient:
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=timeout),
                 allow_redirects=allow_redirects,
-                ssl=False  # .onion-sivuilla ei SSL-validointia
+                ssl=False  # No SSL validation for .onion sites
             ) as response:
-                # Lue sisältö
+                # Read content
                 try:
                     content = await response.text(errors='ignore')
                 except Exception as e:
-                    self.logger.warning(f"Sisällön lukeminen epäonnistui {url}: {e}")
+                    self.logger.warning(f"Failed to read content {url}: {e}")
                     content = ""
 
                 return {
@@ -131,7 +131,7 @@ class TorClient:
                 }
 
         except asyncio.TimeoutError:
-            self.logger.warning(f"Aikakatkaisu: {url}")
+            self.logger.warning(f"Timeout: {url}")
             return {
                 'url': url,
                 'status': 0,
@@ -141,7 +141,7 @@ class TorClient:
             }
 
         except aiohttp.ClientError as e:
-            self.logger.warning(f"HTTP-virhe {url}: {e}")
+            self.logger.warning(f"HTTP error {url}: {e}")
             return {
                 'url': url,
                 'status': 0,
@@ -151,7 +151,7 @@ class TorClient:
             }
 
         except Exception as e:
-            self.logger.error(f"Odottamaton virhe {url}: {e}")
+            self.logger.error(f"Unexpected error {url}: {e}")
             return {
                 'url': url,
                 'status': 0,
@@ -162,13 +162,13 @@ class TorClient:
 
     async def renew_tor_circuit(self) -> bool:
         """
-        Uusii Tor-piirin saadakseen uuden IP-osoitteen (vaatii stem-kirjaston)
+        Renew Tor circuit to get new IP address (requires stem library)
 
         Returns:
-            True jos onnistui, False jos stem ei käytössä tai epäonnistui
+            True if successful, False if stem not enabled or failed
         """
         if not self.config.use_stem or not STEM_AVAILABLE:
-            self.logger.debug("Tor-piirin uusiminen ei käytössä (stem ei asennettu tai ei konfiguroitu)")
+            self.logger.debug("Tor circuit renewal not enabled (stem not installed or configured)")
             return False
 
         try:
@@ -179,18 +179,18 @@ class TorClient:
                     controller.authenticate()
 
                 controller.signal(Signal.NEWNYM)
-                self.logger.info("✓ Tor-piiri uusittu (uusi IP)")
+                self.logger.info("✓ Tor circuit renewed (new IP)")
 
-                # Odota hetki että uusi piiri muodostuu
+                # Wait for new circuit to form
                 await asyncio.sleep(5)
                 return True
 
         except Exception as e:
-            self.logger.error(f"Tor-piirin uusiminen epäonnistui: {e}")
+            self.logger.error(f"Tor circuit renewal failed: {e}")
             return False
 
     async def close(self):
-        """Sulkee HTTP-session"""
+        """Close HTTP session"""
         if self.session:
             await self.session.close()
-            self.logger.info("Tor-yhteys suljettu")
+            self.logger.info("Tor connection closed")

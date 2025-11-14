@@ -1,5 +1,5 @@
 """
-HTML-parsinta ja linkkien eristäminen
+HTML parsing and link extraction
 """
 
 from bs4 import BeautifulSoup
@@ -12,7 +12,7 @@ from .utils import normalize_url, is_onion_url, sanitize_html_text
 
 class HTMLParser:
     """
-    Parsii HTML-sivuja ja eristää .onion-linkit
+    Parses HTML pages and extracts .onion links
     """
 
     def __init__(self, logger: Optional[logging.Logger] = None):
@@ -20,32 +20,32 @@ class HTMLParser:
 
     def parse(self, html: str, base_url: str) -> dict:
         """
-        Parsii HTML:n ja palauttaa rakenteisen datan
+        Parse HTML and return structured data
 
         Args:
-            html: HTML-sisältö
-            base_url: Sivun URL (linkkien normalisointiin)
+            html: HTML content
+            base_url: Page URL (for link normalization)
 
         Returns:
-            Dict sisältäen:
-                - title: str - sivun otsikko
-                - links: List[str] - löydetyt linkit
-                - text_preview: str - tekstin esikatselu
-                - meta: dict - meta-tiedot
+            Dict containing:
+                - title: str - page title
+                - links: List[str] - discovered links
+                - text_preview: str - text preview
+                - meta: dict - meta information
         """
         try:
             soup = BeautifulSoup(html, 'html.parser')
 
-            # Eristä otsikko
+            # Extract title
             title = self._extract_title(soup)
 
-            # Eristä linkit
+            # Extract links
             links = self._extract_links(soup, base_url)
 
-            # Eristä tekstin esikatselu
+            # Extract text preview
             text_preview = self._extract_text_preview(soup)
 
-            # Meta-tiedot
+            # Meta information
             meta = self._extract_meta(soup)
 
             return {
@@ -56,7 +56,7 @@ class HTMLParser:
             }
 
         except Exception as e:
-            self.logger.error(f"HTML-parsinta epäonnistui: {e}")
+            self.logger.error(f"HTML parsing failed: {e}")
             return {
                 'title': '',
                 'links': [],
@@ -65,32 +65,32 @@ class HTMLParser:
             }
 
     def _extract_title(self, soup: BeautifulSoup) -> str:
-        """Eristää sivun otsikon"""
+        """Extract page title"""
         title_tag = soup.find('title')
         if title_tag:
             return sanitize_html_text(title_tag.get_text(), max_length=200)
 
-        # Kokeile h1:stä jos title puuttuu
+        # Try h1 if title is missing
         h1_tag = soup.find('h1')
         if h1_tag:
             return sanitize_html_text(h1_tag.get_text(), max_length=200)
 
-        return "Ei otsikkoa"
+        return "No title"
 
     def _extract_links(self, soup: BeautifulSoup, base_url: str) -> List[str]:
         """
-        Eristää kaikki linkit sivulta
+        Extract all links from page
 
         Returns:
-            Lista normalisoituja URL:eja
+            List of normalized URLs
         """
         links: Set[str] = set()
 
-        # Etsi kaikki <a href="..."> -tagit
+        # Find all <a href="..."> tags
         for tag in soup.find_all('a', href=True):
             href = tag['href']
 
-            # Normalisoi URL
+            # Normalize URL
             normalized = normalize_url(href, base_url)
             if normalized:
                 links.add(normalized)
@@ -105,31 +105,31 @@ class HTMLParser:
         base_domain: Optional[str] = None
     ) -> List[str]:
         """
-        Suodattaa .onion-linkit
+        Filter .onion links
 
         Args:
-            links: Lista URL:eja
-            allowed_domains: Lista sallittuja .onion-domaineja (None = kaikki)
-            follow_external: Sallitaanko muut .onion-domainit
-            base_domain: Lähtödomain (jos follow_external=False, vain tämä sallitaan)
+            links: List of URLs
+            allowed_domains: List of allowed .onion domains (None = all)
+            follow_external: Whether to allow other .onion domains
+            base_domain: Source domain (if follow_external=False, only this is allowed)
 
         Returns:
-            Suodatettu lista .onion-URL:eja
+            Filtered list of .onion URLs
         """
         filtered = []
 
         for link in links:
-            # Tarkista että on .onion
+            # Check that it's .onion
             if not is_onion_url(link):
                 continue
 
-            # Jos allowed_domains määritelty, tarkista että domain on listalla
+            # If allowed_domains defined, check that domain is in list
             if allowed_domains:
                 domain = urlparse(link).hostname
                 if domain not in allowed_domains:
                     continue
 
-            # Jos ei seurata ulkoisia ja domain eroaa
+            # If not following external and domain differs
             if not follow_external and base_domain:
                 domain = urlparse(link).hostname
                 if domain != base_domain:
@@ -140,17 +140,17 @@ class HTMLParser:
         return filtered
 
     def _extract_text_preview(self, soup: BeautifulSoup, max_length: int = 500) -> str:
-        """Eristää sivun tekstin esikatselun"""
-        # Poista script ja style -tagit
+        """Extract page text preview"""
+        # Remove script and style tags
         for script in soup(["script", "style"]):
             script.decompose()
 
-        # Ota body-teksti
+        # Get body text
         text = soup.get_text()
         return sanitize_html_text(text, max_length=max_length)
 
     def _extract_meta(self, soup: BeautifulSoup) -> dict:
-        """Eristää meta-tiedot (description, keywords, jne.)"""
+        """Extract meta information (description, keywords, etc.)"""
         meta = {}
 
         # Meta description

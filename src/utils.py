@@ -1,5 +1,5 @@
 """
-Apufunktiot Tor Crawlerille
+Utility functions for Tor Crawler
 """
 
 import logging
@@ -9,7 +9,7 @@ from typing import Optional
 
 
 def setup_logger(name: str, level: str = "INFO") -> logging.Logger:
-    """Luo ja konfiguroi logger"""
+    """Create and configure logger"""
     logger = logging.getLogger(name)
     logger.setLevel(getattr(logging, level.upper()))
 
@@ -29,7 +29,7 @@ def setup_logger(name: str, level: str = "INFO") -> logging.Logger:
 
 
 def is_onion_url(url: str) -> bool:
-    """Tarkistaa, onko URL .onion-osoite"""
+    """Check if URL is a .onion address"""
     try:
         parsed = urlparse(url)
         return parsed.hostname and parsed.hostname.endswith('.onion')
@@ -39,20 +39,20 @@ def is_onion_url(url: str) -> bool:
 
 def normalize_url(url: str, base_url: Optional[str] = None) -> Optional[str]:
     """
-    Normalisoi URL:n:
-    - Poistaa fragmentit (#)
-    - Muuttaa suhteelliset URL:t absoluuttisiksi
-    - Poistaa trailing slashin
+    Normalize URL:
+    - Remove fragments (#)
+    - Convert relative URLs to absolute
+    - Remove trailing slash
     """
     try:
-        # Jos suhteellinen URL ja base_url annettu
+        # If relative URL and base_url provided
         if base_url:
             url = urljoin(base_url, url)
 
-        # Poista fragmentti
+        # Remove fragment
         url, _ = urldefrag(url)
 
-        # Poista trailing slash (paitsi root)
+        # Remove trailing slash (except root)
         parsed = urlparse(url)
         if parsed.path and parsed.path != '/' and parsed.path.endswith('/'):
             url = url.rstrip('/')
@@ -63,7 +63,7 @@ def normalize_url(url: str, base_url: Optional[str] = None) -> Optional[str]:
 
 
 def extract_domain(url: str) -> Optional[str]:
-    """Eristää domainin URL:sta"""
+    """Extract domain from URL"""
     try:
         parsed = urlparse(url)
         return parsed.hostname
@@ -72,15 +72,15 @@ def extract_domain(url: str) -> Optional[str]:
 
 
 def sanitize_html_text(text: str, max_length: int = 1000) -> str:
-    """Puhdistaa HTML-tekstin ja rajoittaa pituuden"""
+    """Sanitize HTML text and limit length"""
     if not text:
         return ""
 
-    # Poista ylimääräiset välilyönnit ja rivinvaihdot
+    # Remove extra whitespace and newlines
     text = re.sub(r'\s+', ' ', text)
     text = text.strip()
 
-    # Rajoita pituus
+    # Limit length
     if len(text) > max_length:
         text = text[:max_length] + "..."
 
@@ -88,7 +88,7 @@ def sanitize_html_text(text: str, max_length: int = 1000) -> str:
 
 
 def is_valid_url_scheme(url: str) -> bool:
-    """Tarkistaa, että URL käyttää HTTP tai HTTPS -skeemaa"""
+    """Check that URL uses HTTP or HTTPS scheme"""
     try:
         parsed = urlparse(url)
         return parsed.scheme in ['http', 'https']

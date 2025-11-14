@@ -1,11 +1,11 @@
 """
-JSON-pohjainen tallennus (NDJSON-formaatti)
+JSON-based storage (NDJSON format)
 """
 
 import json
 import os
 from pathlib import Path
-from typing import Dict, Any, Set
+from typing import Dict, Any, Set, Optional
 import logging
 
 from .base import BaseStorage
@@ -13,8 +13,8 @@ from .base import BaseStorage
 
 class JSONStorage(BaseStorage):
     """
-    Tallentaa crawlatut sivut NDJSON-tiedostoon (newline-delimited JSON)
-    Jokainen rivi on yksi JSON-objekti
+    Stores crawled pages in NDJSON file (newline-delimited JSON)
+    Each line is one JSON object
     """
 
     def __init__(self, output_dir: str, filename: str, logger: Optional[logging.Logger] = None):
@@ -29,18 +29,18 @@ class JSONStorage(BaseStorage):
         }
 
     async def initialize(self):
-        """Luo output-hakemiston jos ei ole olemassa"""
+        """Create output directory if it doesn't exist"""
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Jos tiedosto on olemassa, lataa käydyt URL:t
+        # If file exists, load visited URLs
         if self.filepath.exists():
-            self.logger.info(f"Jatketaan olemassa olevaa crawlausta: {self.filepath}")
+            self.logger.info(f"Resuming existing crawl: {self.filepath}")
             await self._load_existing_urls()
         else:
-            self.logger.info(f"Luodaan uusi tiedosto: {self.filepath}")
+            self.logger.info(f"Creating new file: {self.filepath}")
 
     async def _load_existing_urls(self):
-        """Lataa käydyt URL:t olemassa olevasta tiedostosta"""
+        """Load visited URLs from existing file"""
         try:
             with open(self.filepath, 'r', encoding='utf-8') as f:
                 for line in f:
@@ -55,50 +55,50 @@ class JSONStorage(BaseStorage):
                     except json.JSONDecodeError:
                         continue
 
-            self.logger.info(f"Ladattu {len(self._visited_urls)} aiemmin crawlattua sivua")
+            self.logger.info(f"Loaded {len(self._visited_urls)} previously crawled pages")
         except Exception as e:
-            self.logger.error(f"Virhe ladattaessa aiempia URL:eja: {e}")
+            self.logger.error(f"Error loading previous URLs: {e}")
 
     async def save_page(self, page_data: Dict[str, Any]):
-        """Tallentaa sivun NDJSON-tiedostoon"""
+        """Save page to NDJSON file"""
         try:
-            # Lisää visited-settiin
+            # Add to visited set
             self._visited_urls.add(page_data['url'])
 
-            # Päivitä tilastot
+            # Update stats
             self._stats['total_pages'] += 1
             if page_data.get('error'):
                 self._stats['errors'] += 1
             else:
                 self._stats['successful'] += 1
 
-            # Kirjoita tiedostoon (append mode)
+            # Write to file (append mode)
             with open(self.filepath, 'a', encoding='utf-8') as f:
                 json.dump(page_data, f, ensure_ascii=False)
                 f.write('\n')
 
         except Exception as e:
-            self.logger.error(f"Virhe tallennettaessa sivua {page_data.get('url', 'unknown')}: {e}")
+            self.logger.error(f"Error saving page {page_data.get('url', 'unknown')}: {e}")
 
     async def get_visited_urls(self) -> set:
-        """Palauttaa kaikki käydyt URL:t"""
+        """Return all visited URLs"""
         return self._visited_urls.copy()
 
     async def close(self):
-        """Ei tarvitse tehdä mitään NDJSON:lla"""
-        self.logger.info(f"JSON-tallennus valmis: {self.filepath}")
-        self.logger.info(f"Tilastot: {self._stats}")
+        """Nothing to do for NDJSON"""
+        self.logger.info(f"JSON storage complete: {self.filepath}")
+        self.logger.info(f"Statistics: {self._stats}")
 
     async def get_stats(self) -> Dict[str, Any]:
-        """Palauttaa tilastot"""
+        """Return statistics"""
         return self._stats.copy()
 
     def load_all_pages(self) -> list:
         """
-        Apufunktio: Lataa kaikki sivut tiedostosta (jatkokäsittelyä varten)
+        Helper function: Load all pages from file (for post-processing)
 
         Returns:
-            Lista dictionaryja
+            List of dictionaries
         """
         pages = []
         try:

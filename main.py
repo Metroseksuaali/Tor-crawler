@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tor Crawler - CLI-käyttöliittymä
+Tor Crawler - CLI interface
 """
 
 import asyncio
@@ -13,27 +13,27 @@ from src.crawler import TorCrawler
 
 
 def parse_arguments():
-    """Parsii komentoriviargumentit"""
+    """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description='Tor Crawler - Turvallinen .onion-sivustojen tutkija',
+        description='Tor Crawler - Secure and ethical .onion sites explorer',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
-Esimerkkejä:
-  # Käytä config.yaml-tiedostoa
+Examples:
+  # Use config.yaml file
   python main.py --config config.yaml
 
-  # Ohita parametrit komentoriviltä
+  # Override parameters from command line
   python main.py --start-url "http://example.onion" --max-pages 50 --max-depth 2
 
-  # Käytä SQLite-tallennusta
+  # Use SQLite storage
   python main.py --config config.yaml --storage sqlite
 
-TURVALLISUUS JA ETIIKKA:
-  - Käytä vain tutkimus- ja oppimistarkoituksiin
-  - Noudata paikallisia lakeja
-  - Kunnioita palvelinten kuormaa (älä poista rate limitingiä)
-  - Älä yritä tunkeutua tai kaataa palveluita
-  - Älä tallenna henkilötietoja ilman lupaa
+SECURITY & ETHICS:
+  - Use only for research and educational purposes
+  - Comply with local laws
+  - Respect server load (don't disable rate limiting)
+  - Don't attempt to infiltrate or crash services
+  - Don't store or share personal data without permission
         '''
     )
 
@@ -41,67 +41,67 @@ TURVALLISUUS JA ETIIKKA:
         '--config', '-c',
         type=str,
         default='config.yaml',
-        help='Polku konfiguraatiotiedostoon (oletus: config.yaml)'
+        help='Path to configuration file (default: config.yaml)'
     )
 
     parser.add_argument(
         '--start-url', '-u',
         type=str,
-        help='Aloitus-URL (.onion)'
+        help='Start URL (.onion)'
     )
 
     parser.add_argument(
         '--max-depth', '-d',
         type=int,
-        help='Maksimisyvyys (ohittaa config-tiedoston)'
+        help='Maximum depth (overrides config file)'
     )
 
     parser.add_argument(
         '--max-pages', '-p',
         type=int,
-        help='Maksimisivumäärä (ohittaa config-tiedoston)'
+        help='Maximum pages (overrides config file)'
     )
 
     parser.add_argument(
         '--storage', '-s',
         choices=['json', 'sqlite'],
-        help='Tallennustyyppi (ohittaa config-tiedoston)'
+        help='Storage type (overrides config file)'
     )
 
     parser.add_argument(
         '--delay',
         type=float,
-        help='Viive pyyntöjen välillä sekunteina (ohittaa config-tiedoston)'
+        help='Delay between requests in seconds (overrides config file)'
     )
 
     parser.add_argument(
         '--log-level',
         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
         default='INFO',
-        help='Lokitaso (oletus: INFO)'
+        help='Log level (default: INFO)'
     )
 
     return parser.parse_args()
 
 
 async def main():
-    """Pääfunktio"""
+    """Main function"""
     args = parse_arguments()
 
-    # Tarkista että config-tiedosto on olemassa
+    # Check that config file exists
     config_path = Path(args.config)
     if not config_path.exists():
-        print(f"❌ Virhe: Konfiguraatiotiedostoa ei löydy: {args.config}")
-        print(f"Luo tiedosto tai käytä --config -parametria osoittamaan olemassa oleva tiedosto.")
-        print(f"\nVoit myös määritellä asetukset komentoriviltä:")
+        print(f"❌ Error: Configuration file not found: {args.config}")
+        print(f"Create the file or use --config parameter to point to an existing file.")
+        print(f"\nYou can also specify settings from command line:")
         print(f"  python main.py --start-url 'http://example.onion' --max-pages 50")
         sys.exit(1)
 
     try:
-        # Lataa konfiguraatio
+        # Load configuration
         config = Config.from_yaml(str(config_path))
 
-        # Ohita komentoriviparametreilla
+        # Override with command line parameters
         if args.start_url:
             config.crawler.start_url = args.start_url
 
@@ -120,22 +120,22 @@ async def main():
         if args.log_level:
             config.log_level = args.log_level
 
-        # Validoi konfiguraatio
+        # Validate configuration
         config.validate()
 
     except FileNotFoundError:
-        print(f"❌ Virhe: Konfiguraatiotiedostoa ei löydy: {args.config}")
+        print(f"❌ Error: Configuration file not found: {args.config}")
         sys.exit(1)
 
     except ValueError as e:
-        print(f"❌ Konfiguraatiovirhe: {e}")
+        print(f"❌ Configuration error: {e}")
         sys.exit(1)
 
     except Exception as e:
-        print(f"❌ Odottamaton virhe konfiguraatiossa: {e}")
+        print(f"❌ Unexpected error in configuration: {e}")
         sys.exit(1)
 
-    # Luo ja aja crawler
+    # Create and run crawler
     crawler = TorCrawler(config)
 
     try:
@@ -143,23 +143,23 @@ async def main():
         await crawler.crawl()
 
     except ConnectionError as e:
-        print(f"\n❌ Yhteysvirhe: {e}")
-        print(f"\nVarmista että Tor on käynnissä:")
-        print(f"  - Linux/Mac: 'tor' tai 'brew services start tor'")
-        print(f"  - Windows: Käynnistä Tor Browser tai asenna Tor Expert Bundle")
+        print(f"\n❌ Connection error: {e}")
+        print(f"\nEnsure that Tor is running:")
+        print(f"  - Linux/Mac: 'tor' or 'brew services start tor'")
+        print(f"  - Windows: Start Tor Browser or install Tor Expert Bundle")
         print(f"  - Docker: 'docker run -d -p 9050:9050 dperson/torproxy'")
         sys.exit(1)
 
     except KeyboardInterrupt:
-        print("\n\n⚠ Crawlaus keskeytetty käyttäjän toimesta")
+        print("\n\n⚠ Crawl interrupted by user")
 
     except Exception as e:
-        print(f"\n❌ Kriittinen virhe: {e}")
+        print(f"\n❌ Critical error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
 
 
 if __name__ == '__main__':
-    # Aja async main
+    # Run async main
     asyncio.run(main())

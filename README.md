@@ -1,72 +1,72 @@
 # Tor Crawler
 
-🔍 Turvallinen ja eettinen web crawler .onion-sivustojen tutkimiseen Tor-verkossa.
+🔍 Secure and ethical web crawler for researching .onion sites on the Tor network.
 
-**Tarkoitus:** Tutkimus- ja oppimistarkoitukset
-**Tekniikka:** Python 3.9+ | aiohttp | BeautifulSoup | Tor SOCKS5
-
----
-
-## 📋 Sisällysluettelo
-
-- [Ominaisuudet](#-ominaisuudet)
-- [Teknologiavalinnat](#-teknologiavalinnat)
-- [Esivaatimukset](#-esivaatimukset)
-- [Asennus](#-asennus)
-- [Käyttö](#-käyttö)
-- [Konfiguraatio](#-konfiguraatio)
-- [Datan käsittely](#-datan-käsittely)
-- [Arkkitehtuuri](#-arkkitehtuuri)
-- [Turvallisuus ja etiikka](#-turvallisuus-ja-etiikka)
-- [Vianmääritys](#-vianmääritys)
+**Purpose:** Research and educational use
+**Technology:** Python 3.9+ | aiohttp | BeautifulSoup | Tor SOCKS5
 
 ---
 
-## ✨ Ominaisuudet
+## 📋 Table of Contents
 
-- ✅ **Tor-integraatio:** Kaikki liikenne kulkee Tor-verkon kautta (SOCKS5-proxy)
-- ✅ **Asynkroninen:** Tehokas rinnakkaiskäsittely asyncio:lla
-- ✅ **Rate limiting:** Konfiguroitava viive pyyntöjen välillä (eettinen crawlaus)
-- ✅ **BFS-algoritmi:** Leveyssuuntainen läpikäynti syvyydenrajoituksella
-- ✅ **Kaksi tallennusvaihtoehtoa:** JSON (NDJSON) ja SQLite
-- ✅ **HTML-parsinta:** BeautifulSoup + linkkien suodatus
-- ✅ **Virheenkäsittely:** Timeout, connection errors, retry-logiikka
-- ✅ **Domain-rajaus:** Vain .onion-sivustot, konfiguroitavat domain-rajoitukset
-- ✅ **CLI-käyttöliittymä:** Helppo käyttö komentoriviltä
-- ✅ **Jatkettava crawlaus:** Voit pysäyttää ja jatkaa myöhemmin
+- [Features](#-features)
+- [Technology Choice](#-technology-choice)
+- [Prerequisites](#-prerequisites)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Configuration](#-configuration)
+- [Data Processing](#-data-processing)
+- [Architecture](#-architecture)
+- [Security & Ethics](#-security--ethics)
+- [Troubleshooting](#-troubleshooting)
 
 ---
 
-## 🎯 Teknologiavalinnat
+## ✨ Features
 
-### Miksi Python + aiohttp?
+- ✅ **Tor Integration:** All traffic goes through Tor network (SOCKS5 proxy)
+- ✅ **Asynchronous:** Efficient parallel processing with asyncio
+- ✅ **Rate Limiting:** Configurable delay between requests (ethical crawling)
+- ✅ **BFS Algorithm:** Breadth-first traversal with depth limiting
+- ✅ **Two Storage Options:** JSON (NDJSON) and SQLite
+- ✅ **HTML Parsing:** BeautifulSoup + link filtering
+- ✅ **Error Handling:** Timeouts, connection errors, retry logic
+- ✅ **Domain Filtering:** .onion sites only, configurable domain restrictions
+- ✅ **CLI Interface:** Easy command-line usage
+- ✅ **Resumable Crawling:** Stop and continue later
 
-**Vertaillut vaihtoehdot:**
-1. **Python + aiohttp** ⭐ (valittu)
+---
+
+## 🎯 Technology Choice
+
+### Why Python + aiohttp?
+
+**Compared alternatives:**
+1. **Python + aiohttp** ⭐ (selected)
 2. Node.js + axios
 3. Rust + reqwest
 
-**Valintaperusteet:**
-- ✅ Kypsä Tor-ekosysteemi (stem-kirjasto)
-- ✅ Erinomainen scraping-tuki (BeautifulSoup)
-- ✅ Asynkroninen suoritus (asyncio)
-- ✅ Helppo oppia ja ylläpitää
-- ✅ Data science -integraatio (pandas, numpy)
+**Selection criteria:**
+- ✅ Mature Tor ecosystem (stem library)
+- ✅ Excellent scraping support (BeautifulSoup)
+- ✅ Asynchronous execution (asyncio)
+- ✅ Easy to learn and maintain
+- ✅ Data science integration (pandas, numpy)
 
 ---
 
-## 🔧 Esivaatimukset
+## 🔧 Prerequisites
 
 ### 1. Python 3.9+
 
-Tarkista versio:
+Check version:
 ```bash
 python3 --version
 ```
 
 ### 2. Tor
 
-Crawleri tarvitsee käynnissä olevan Tor-instanssin.
+The crawler requires a running Tor instance.
 
 **Linux/macOS:**
 ```bash
@@ -80,90 +80,90 @@ brew services start tor
 ```
 
 **Windows:**
-- Lataa [Tor Expert Bundle](https://www.torproject.org/download/tor/)
-- TAI käynnistä Tor Browser (sisältää SOCKS-proxyn)
+- Download [Tor Expert Bundle](https://www.torproject.org/download/tor/)
+- OR start Tor Browser (includes SOCKS proxy)
 
 **Docker:**
 ```bash
 docker run -d -p 9050:9050 --name tor dperson/torproxy
 ```
 
-**Testaa että Tor toimii:**
+**Test that Tor works:**
 ```bash
 curl --socks5-hostname 127.0.0.1:9050 https://check.torproject.org/api/ip
 ```
 
-Pitäisi palauttaa: `{"IsTor": true, ...}`
+Should return: `{"IsTor": true, ...}`
 
 ---
 
-## 📦 Asennus
+## 📦 Installation
 
-### 1. Kloonaa repository
+### 1. Clone repository
 ```bash
 git clone <repository-url>
 cd Tor-crawler
 ```
 
-### 2. Luo virtuaaliympäristö (suositeltu)
+### 2. Create virtual environment (recommended)
 ```bash
 python3 -m venv venv
 source venv/bin/activate  # Linux/macOS
-# TAI
+# OR
 venv\Scripts\activate  # Windows
 ```
 
-### 3. Asenna riippuvuudet
+### 3. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Konfiguroi crawler
+### 4. Configure crawler
 
-Kopioi esimerkkikonfiguraatio:
+Copy example configuration:
 ```bash
 cp config.example.yaml config.yaml
 ```
 
-Muokkaa `config.yaml`:
+Edit `config.yaml`:
 ```yaml
 crawler:
-  start_url: "http://your-target.onion"  # ⚠️ Lisää tähän tutkittava .onion-osoite
+  start_url: "http://your-target.onion"  # ⚠️ Add .onion address here
   max_depth: 2
   max_pages: 50
-  request_delay: 3.0  # TÄRKEÄ: Älä poista!
+  request_delay: 3.0  # IMPORTANT: Don't remove!
 ```
 
 ---
 
-## 🚀 Käyttö
+## 🚀 Usage
 
-### Peruskomento
+### Basic command
 
 ```bash
 python main.py --config config.yaml
 ```
 
-### Komentoriviparametrit
+### Command line parameters
 
 ```bash
-# Käytä kaikki asetukset komentoriviltä
+# Use all settings from command line
 python main.py --start-url "http://example.onion" --max-pages 50 --max-depth 2
 
-# SQLite-tallennus
+# SQLite storage
 python main.py --config config.yaml --storage sqlite
 
-# Muuta rate limiting
+# Change rate limiting
 python main.py --config config.yaml --delay 5.0
 
-# Debug-tila
+# Debug mode
 python main.py --config config.yaml --log-level DEBUG
 ```
 
-### Esimerkkiajo
+### Example run
 
 ```bash
-# Aloita pienellä testillä
+# Start with small test
 python main.py \
   --start-url "http://example.onion" \
   --max-pages 10 \
@@ -172,53 +172,53 @@ python main.py \
   --storage json
 ```
 
-### Keskeytys ja jatkaminen
+### Interruption and resuming
 
-Voit keskeyttää crawlauksen (`Ctrl+C`) ja jatkaa myöhemmin:
+You can interrupt crawling (`Ctrl+C`) and resume later:
 ```bash
-# Crawler lataa automaattisesti aiemmin käydyt URL:t
+# Crawler automatically loads previously visited URLs
 python main.py --config config.yaml
 ```
 
 ---
 
-## ⚙️ Konfiguraatio
+## ⚙️ Configuration
 
-### YAML-tiedosto (config.yaml)
+### YAML file (config.yaml)
 
 ```yaml
-# Tor-asetukset
+# Tor settings
 tor:
   proxy_host: "127.0.0.1"
   proxy_port: 9050
   control_port: 9051
-  use_stem: false  # true = mahdollistaa IP-vaihdon
+  use_stem: false  # true = enables IP rotation
 
-# Crawler-asetukset
+# Crawler settings
 crawler:
   start_url: "http://example.onion"
-  max_depth: 3              # Kuinka monta linkkitasoa
-  max_pages: 100            # Maksimi sivuja yhteensä
-  max_pages_per_domain: 50  # Maksimi per domain
-  request_delay: 2.0        # Sekuntia pyyntöjen välillä
-  request_timeout: 30       # Timeout sekunteina
-  follow_external_onion: true  # Seuraa muita .onion-domaineja
-  allowed_domains: []       # Tyhjä = kaikki, tai lista: ["a.onion", "b.onion"]
+  max_depth: 3              # How many link levels
+  max_pages: 100            # Maximum total pages
+  max_pages_per_domain: 50  # Maximum per domain
+  request_delay: 2.0        # Seconds between requests
+  request_timeout: 30       # Timeout in seconds
+  follow_external_onion: true  # Follow other .onion domains
+  allowed_domains: []       # Empty = all, or list: ["a.onion", "b.onion"]
 
-# Tallennus
+# Storage
 storage:
-  storage_type: "json"      # "json" tai "sqlite"
+  storage_type: "json"      # "json" or "sqlite"
   output_dir: "./data"
   json_filename: "crawled_pages.json"
   sqlite_filename: "crawler.db"
 
-# Lokitus
+# Logging
 log_level: "INFO"
 ```
 
-### Ympäristömuuttujat
+### Environment variables
 
-Luo `.env`-tiedosto (kopioi `.env.example`):
+Create `.env` file (copy `.env.example`):
 ```env
 TOR_PROXY_HOST=127.0.0.1
 TOR_PROXY_PORT=9050
@@ -228,22 +228,22 @@ MAX_PAGES=100
 LOG_LEVEL=INFO
 ```
 
-**Prioriteetti:** Komentorivi > Ympäristömuuttujat > YAML
+**Priority:** Command line > Environment variables > YAML
 
 ---
 
-## 📊 Datan käsittely
+## 📊 Data Processing
 
-### JSON-tallennus (NDJSON)
+### JSON storage (NDJSON)
 
-Jokainen rivi = yksi JSON-objekti:
+Each line = one JSON object:
 
 ```json
-{"url": "http://example.onion/page1", "status": 200, "title": "Esimerkki", "depth": 1, "timestamp": "2025-01-01T12:00:00", "links": ["http://example.onion/page2"], "text_preview": "...", "meta": {}, "error": null}
-{"url": "http://example.onion/page2", "status": 200, "title": "Toinen", "depth": 2, ...}
+{"url": "http://example.onion/page1", "status": 200, "title": "Example", "depth": 1, "timestamp": "2025-01-01T12:00:00", "links": ["http://example.onion/page2"], "text_preview": "...", "meta": {}, "error": null}
+{"url": "http://example.onion/page2", "status": 200, "title": "Second", "depth": 2, ...}
 ```
 
-**Lukeminen Pythonilla:**
+**Reading with Python:**
 ```python
 import json
 
@@ -253,7 +253,7 @@ with open('data/crawled_pages.json', 'r') as f:
         print(page['url'], page['title'])
 ```
 
-**Lukeminen pandas:lla:**
+**Reading with pandas:**
 ```python
 import pandas as pd
 
@@ -261,25 +261,25 @@ df = pd.read_json('data/crawled_pages.json', lines=True)
 print(df[['url', 'status', 'title']])
 ```
 
-### SQLite-tallennus
+### SQLite storage
 
-**Rakenne:**
+**Structure:**
 - `pages`: url, status, title, depth, timestamp, text_preview, error, meta
 - `links`: source_url, target_url
 
-**Kyselyt:**
+**Queries:**
 ```sql
--- Kaikki onnistuneet sivut
+-- All successful pages
 SELECT url, title FROM pages WHERE error IS NULL;
 
--- Virhesivut
+-- Error pages
 SELECT url, status, error FROM pages WHERE error IS NOT NULL;
 
--- Linkkiverkosto
+-- Link network
 SELECT source_url, target_url FROM links;
 ```
 
-**Python-esimerkki:**
+**Python example:**
 ```python
 import sqlite3
 
@@ -293,154 +293,154 @@ for row in cursor.fetchall():
 
 ---
 
-## 🏗️ Arkkitehtuuri
+## 🏗️ Architecture
 
 ```
 src/
-├── config.py          # Konfiguraation lataus ja validointi
-├── tor_client.py      # Tor SOCKS5-yhteys + HTTP-pyynnöt
-├── parser.py          # HTML-parsinta ja linkkien eristäminen
-├── crawler.py         # BFS-algoritmi ja ydinlogiikka
+├── config.py          # Configuration loading and validation
+├── tor_client.py      # Tor SOCKS5 connection + HTTP requests
+├── parser.py          # HTML parsing and link extraction
+├── crawler.py         # BFS algorithm and core logic
 ├── storage/
-│   ├── base.py        # Abstrakti tallennusluokka
-│   ├── json_storage.py   # NDJSON-tallennus
-│   └── sqlite_storage.py # SQLite-tallennus
-└── utils.py           # Apufunktiot (URL-validointi, logger)
+│   ├── base.py        # Abstract storage class
+│   ├── json_storage.py   # NDJSON storage
+│   └── sqlite_storage.py # SQLite storage
+└── utils.py           # Helper functions (URL validation, logger)
 ```
 
-**Tietovirta:**
-1. `main.py` lataa konfiguraation (`config.py`)
-2. `TorCrawler` alustaa `TorClient`:n ja `Storage`:n
-3. BFS-silmukka: Ota URL jonosta → Hae `TorClient`:llä → Parsoi `HTMLParser`:llä → Tallenna `Storage`:en → Lisää linkit jonoon
-4. Lopeta kun max_pages tai jono tyhjä
+**Data flow:**
+1. `main.py` loads configuration (`config.py`)
+2. `TorCrawler` initializes `TorClient` and `Storage`
+3. BFS loop: Get URL from queue → Fetch with `TorClient` → Parse with `HTMLParser` → Save to `Storage` → Add links to queue
+4. End when max_pages or queue empty
 
 ---
 
-## 🔒 Turvallisuus ja etiikka
+## 🔒 Security & Ethics
 
-### ⚠️ TÄRKEÄÄ
+### ⚠️ IMPORTANT
 
-**SALLITTU käyttö:**
-- ✅ Tutkimus- ja oppimistarkoitukset
-- ✅ Lailliset .onion-sivustot (julkiset hakemistot, tutkimuskohteet)
-- ✅ Oma infrastruktuuri/testisivustot
+**ALLOWED use:**
+- ✅ Research and educational purposes
+- ✅ Legal .onion sites (public directories, research targets)
+- ✅ Own infrastructure/test sites
 
-**KIELLETTY käyttö:**
-- ❌ Laittomien .onion-sivustojen crawlaus
-- ❌ Denial-of-Service (DoS) -hyökkäykset
-- ❌ Palvelinten ylikuormittaminen
-- ❌ Tunkeutumisyritykset
-- ❌ Henkilötietojen kaappaaminen
-- ❌ Käyttäjien deanonymisointi
+**FORBIDDEN use:**
+- ❌ Illegal .onion site crawling
+- ❌ Denial-of-Service (DoS) attacks
+- ❌ Server overloading
+- ❌ Intrusion attempts
+- ❌ Personal data harvesting
+- ❌ User deanonymization
 
-### Eettiset periaatteet
+### Ethical principles
 
-1. **Noudata lakeja:** Varmista että toimintasi on laillista maassasi
-2. **Kunnioita robots.txt:** Crawler kunnioittaa oletuksena robots.txt-tiedostoja
-3. **Rate limiting:** ÄLÄ poista tai pienennä `request_delay`-arvoa (vähintään 2-3 sekuntia)
-4. **Maksimisivumäärä:** Älä aseta `max_pages` liian korkeaksi (aloita <100)
-5. **Henkilötiedot:** Älä tallenna tai jaa henkilökohtaisia tietoja
-6. **Vastuu:** Käyttäjä on vastuussa crawlerin käytöstä
+1. **Follow laws:** Ensure your actions are legal in your country
+2. **Respect robots.txt:** Crawler respects robots.txt files by default
+3. **Rate limiting:** DO NOT remove or decrease `request_delay` (minimum 2-3 seconds)
+4. **Maximum pages:** Don't set `max_pages` too high (start <100)
+5. **Personal data:** Don't store or share personal information
+6. **Responsibility:** User is responsible for crawler usage
 
-### Tekniset turvallisuustoimet
+### Technical security measures
 
-- **Tor-yhteys:** Kaikki liikenne kulkee Tor-verkon kautta
-- **Ei JavaScript:** Crawler ei suorita JavaScriptiä (staattinen HTML)
-- **SSL-validointi pois päältä:** .onion-sivustoilla ei SSL-sertifikaatteja
-- **Timeout:** Kaikki pyynnöt aikakatkaisevat (default 30s)
-- **Virheenkäsittely:** Kattava try-except-logiikka
+- **Tor connection:** All traffic goes through Tor network
+- **No JavaScript:** Crawler doesn't execute JavaScript (static HTML)
+- **SSL validation off:** .onion sites don't have SSL certificates
+- **Timeout:** All requests timeout (default 30s)
+- **Error handling:** Comprehensive try-except logic
 
 ---
 
-## 🐛 Vianmääritys
+## 🐛 Troubleshooting
 
-### Virhe: "Tor-yhteyttä ei voitu muodostaa"
+### Error: "Could not establish Tor connection"
 
-**Syy:** Tor ei ole käynnissä tai portti on väärä.
+**Cause:** Tor is not running or port is wrong.
 
-**Ratkaisu:**
+**Solution:**
 ```bash
-# Tarkista että Tor on käynnissä
+# Check that Tor is running
 sudo systemctl status tor  # Linux
 brew services list | grep tor  # macOS
 
-# Testaa Tor-yhteyttä
+# Test Tor connection
 curl --socks5-hostname 127.0.0.1:9050 https://check.torproject.org/api/ip
 
-# Tarkista portti config.yaml:ssa (oletuksena 9050)
+# Check port in config.yaml (default 9050)
 ```
 
-### Virhe: "Konfiguraatiotiedostoa ei löydy"
+### Error: "Configuration file not found"
 
-**Syy:** `config.yaml` puuttuu.
+**Cause:** `config.yaml` is missing.
 
-**Ratkaisu:**
+**Solution:**
 ```bash
 cp config.example.yaml config.yaml
-# Muokkaa config.yaml ja lisää start_url
+# Edit config.yaml and add start_url
 ```
 
-### Timeout-virheitä paljon
+### Many timeout errors
 
-**Syy:** .onion-sivustot ovat hitaita tai offline.
+**Cause:** .onion sites are slow or offline.
 
-**Ratkaisu:**
-- Kasvata `request_timeout` arvoa (esim. 60)
-- Kasvata `max_retries` arvoa (esim. 5)
-- Tarkista että sivusto on todella saavutettavissa Tor Browserilla
+**Solution:**
+- Increase `request_timeout` value (e.g. 60)
+- Increase `max_retries` value (e.g. 5)
+- Check that site is actually reachable with Tor Browser
 
 ### ImportError: No module named 'stem'
 
-**Syy:** Riippuvuuksia ei ole asennettu.
+**Cause:** Dependencies not installed.
 
-**Ratkaisu:**
+**Solution:**
 ```bash
 pip install -r requirements.txt
 ```
 
 ---
 
-## 📚 Jatkokehitys
+## 📚 Future Development
 
-**Mahdolliset parannukset:**
-- [ ] Robots.txt-tuki (parsinta ja kunnioittaminen)
-- [ ] stem-integraatio (automaattinen IP-vaihto)
-- [ ] JavaScript-renderöinti (Playwright/Selenium)
-- [ ] Graafinen käyttöliittymä (web UI)
-- [ ] Verkkoanalyysi (NetworkX, PageRank)
-- [ ] Screenshot-tallennus
-- [ ] Multi-threading/multiprocessing-tuki
-
----
-
-## 📄 Lisenssi
-
-Tämä projekti on tarkoitettu **tutkimus- ja oppimistarkoituksiin**. Käyttäjä on täysin vastuussa crawlerin käytöstä ja siitä, että toiminta on laillista.
-
-**Tekijät eivät ota vastuuta:**
-- Laittomasta käytöstä
-- Vahingosta kolmansille osapuolille
-- Datan väärinkäytöstä
+**Possible improvements:**
+- [ ] Robots.txt support (parsing and respecting)
+- [ ] stem integration (automatic IP rotation)
+- [ ] JavaScript rendering (Playwright/Selenium)
+- [ ] Graphical user interface (web UI)
+- [ ] Network analysis (NetworkX, PageRank)
+- [ ] Screenshot saving
+- [ ] Multi-threading/multiprocessing support
 
 ---
 
-## 🙏 Kiitokset
+## 📄 License
 
-- **Tor Project** - Anonymiteetti ja yksityisyys
-- **aiohttp** - Erinomainen asynkroninen HTTP-kirjasto
-- **BeautifulSoup** - HTML-parsinta
-- **Python-yhteisö** - Fantastinen ekosysteemi
+This project is intended for **research and educational purposes**. User is fully responsible for crawler usage and ensuring actions are legal.
 
----
-
-## 📞 Tuki
-
-**Ongelmat?**
-1. Lue [Vianmääritys](#-vianmääritys)-osio
-2. Tarkista Tor-yhteys
-3. Tarkista konfiguraatio
-4. Käytä `--log-level DEBUG` saadaksesi lisätietoja
+**Authors take no responsibility for:**
+- Illegal use
+- Harm to third parties
+- Data misuse
 
 ---
 
-**Hyvää tutkimusmatkaa! 🔍🧅**
+## 🙏 Credits
+
+- **Tor Project** - Anonymity and privacy
+- **aiohttp** - Excellent asynchronous HTTP library
+- **BeautifulSoup** - HTML parsing
+- **Python community** - Fantastic ecosystem
+
+---
+
+## 📞 Support
+
+**Problems?**
+1. Read [Troubleshooting](#-troubleshooting) section
+2. Check Tor connection
+3. Check configuration
+4. Use `--log-level DEBUG` for more information
+
+---
+
+**Happy researching! 🔍🧅**

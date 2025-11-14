@@ -1,7 +1,7 @@
-# Tor Crawler - Esimerkkikonfiguraatio
-# Kopioi tämä config.yaml-nimellä ja muokkaa start_url-kenttää
+# Tor Crawler - Example Configuration
+# Copy this as config.yaml and modify the start_url field
 
-# Tor-yhteysasetukset
+# Tor connection settings
 tor:
   proxy_host: "127.0.0.1"
   proxy_port: 9050
@@ -9,33 +9,33 @@ tor:
   control_password: null
   use_stem: false
 
-# Crawlerin asetukset
+# Crawler settings
 crawler:
-  # HUOM: Lisää tähän tutkittava .onion-osoite
+  # NOTE: Add the .onion address to research here
   start_url: "http://your-onion-site.onion"
 
-  max_depth: 2                  # Aloita pienellä syvyydellä
-  max_pages: 50                 # Aloita pienellä sivumäärällä
+  max_depth: 2                  # Start with small depth
+  max_pages: 50                 # Start with small page count
   max_pages_per_domain: 25
 
-  # TÄRKEÄÄ: Älä poista rate limitingiä!
-  request_delay: 3.0            # 3 sekuntia pyyntöjen välillä
+  # IMPORTANT: Don't remove rate limiting!
+  request_delay: 3.0            # 3 seconds between requests
 
   request_timeout: 30
   user_agent: "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0"
-  follow_external_onion: false  # Älä seuraa muita domaineja (turvallisempi)
+  follow_external_onion: false  # Don't follow other domains (safer)
   allowed_domains: []
   max_retries: 3
   obey_robots_txt: true
 
-# Tallennusasetukset
+# Storage settings
 storage:
-  storage_type: "json"          # Aloita JSON:lla (helpompi tutkia)
+  storage_type: "json"          # Start with JSON (easier to examine)
   output_dir: "./data"
   json_filename: "crawled_pages.json"
   sqlite_filename: "crawler.db"
   save_html_content: false
   max_content_length: 500
 
-# Lokitaso
+# Log level
 log_level: "INFO"

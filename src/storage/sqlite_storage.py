@@ -1,5 +1,5 @@
 """
-SQLite-pohjainen tallennus
+SQLite-based storage
 """
 
 import sqlite3
@@ -13,7 +13,7 @@ from .base import BaseStorage
 
 class SQLiteStorage(BaseStorage):
     """
-    Tallentaa crawlatut sivut SQLite-tietokantaan
+    Stores crawled pages in SQLite database
     """
 
     def __init__(self, output_dir: str, filename: str, logger: Optional[logging.Logger] = None):
@@ -24,25 +24,25 @@ class SQLiteStorage(BaseStorage):
         self._visited_urls: Set[str] = set()
 
     async def initialize(self):
-        """Luo tietokanta ja taulut"""
+        """Create database and tables"""
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         self.conn = sqlite3.connect(str(self.filepath))
         self.conn.row_factory = sqlite3.Row
 
-        # Luo taulut
+        # Create tables
         self._create_tables()
 
-        # Lataa käydyt URL:t
+        # Load visited URLs
         await self._load_visited_urls()
 
-        self.logger.info(f"SQLite-tietokanta alustettu: {self.filepath}")
+        self.logger.info(f"SQLite database initialized: {self.filepath}")
 
     def _create_tables(self):
-        """Luo tietokantataulut"""
+        """Create database tables"""
         cursor = self.conn.cursor()
 
-        # Pääsivu-taulu
+        # Main pages table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS pages (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,12 +53,12 @@ class SQLiteStorage(BaseStorage):
                 timestamp TEXT,
                 text_preview TEXT,
                 error TEXT,
-                meta TEXT,  -- JSON-muodossa
+                meta TEXT,  -- JSON format
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
 
-        # Linkit-taulu
+        # Links table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS links (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,7 +68,7 @@ class SQLiteStorage(BaseStorage):
             )
         ''')
 
-        # Indeksit suorituskyvyn parantamiseksi
+        # Indexes for performance
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_pages_url ON pages(url)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_pages_status ON pages(status)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_links_source ON links(source_url)')
@@ -76,18 +76,18 @@ class SQLiteStorage(BaseStorage):
         self.conn.commit()
 
     async def _load_visited_urls(self):
-        """Lataa käydyt URL:t tietokannasta"""
+        """Load visited URLs from database"""
         cursor = self.conn.cursor()
         cursor.execute('SELECT url FROM pages')
         self._visited_urls = {row[0] for row in cursor.fetchall()}
-        self.logger.info(f"Ladattu {len(self._visited_urls)} aiemmin crawlattua sivua")
+        self.logger.info(f"Loaded {len(self._visited_urls)} previously crawled pages")
 
     async def save_page(self, page_data: Dict[str, Any]):
-        """Tallentaa sivun SQLite-tietokantaan"""
+        """Save page to SQLite database"""
         try:
             cursor = self.conn.cursor()
 
-            # Tallenna pääsivu
+            # Save main page
             cursor.execute('''
                 INSERT OR REPLACE INTO pages
                 (url, status, title, depth, timestamp, text_preview, error, meta)
@@ -103,7 +103,7 @@ class SQLiteStorage(BaseStorage):
                 json.dumps(page_data.get('meta', {}))
             ))
 
-            # Tallenna linkit
+            # Save links
             for link in page_data.get('links', []):
                 cursor.execute('''
                     INSERT INTO links (source_url, target_url)
@@ -112,41 +112,41 @@ class SQLiteStorage(BaseStorage):
 
             self.conn.commit()
 
-            # Lisää visited-settiin
+            # Add to visited set
             self._visited_urls.add(page_data['url'])
 
         except sqlite3.IntegrityError as e:
-            self.logger.debug(f"Sivu jo tietokannassa: {page_data['url']}")
+            self.logger.debug(f"Page already in database: {page_data['url']}")
         except Exception as e:
-            self.logger.error(f"Virhe tallennettaessa sivua {page_data.get('url', 'unknown')}: {e}")
+            self.logger.error(f"Error saving page {page_data.get('url', 'unknown')}: {e}")
 
     async def get_visited_urls(self) -> set:
-        """Palauttaa kaikki käydyt URL:t"""
+        """Return all visited URLs"""
         return self._visited_urls.copy()
 
     async def close(self):
-        """Sulkee tietokantayhteyden"""
+        """Close database connection"""
         if self.conn:
             self.conn.close()
-            self.logger.info(f"SQLite-yhteys suljettu: {self.filepath}")
+            self.logger.info(f"SQLite connection closed: {self.filepath}")
 
     async def get_stats(self) -> Dict[str, Any]:
-        """Palauttaa tilastot"""
+        """Return statistics"""
         cursor = self.conn.cursor()
 
-        # Kokonaismäärä
+        # Total count
         cursor.execute('SELECT COUNT(*) FROM pages')
         total = cursor.fetchone()[0]
 
-        # Onnistuneet
+        # Successful
         cursor.execute('SELECT COUNT(*) FROM pages WHERE error IS NULL')
         successful = cursor.fetchone()[0]
 
-        # Virheet
+        # Errors
         cursor.execute('SELECT COUNT(*) FROM pages WHERE error IS NOT NULL')
         errors = cursor.fetchone()[0]
 
-        # Linkit
+        # Links
         cursor.execute('SELECT COUNT(*) FROM links')
         total_links = cursor.fetchone()[0]
 
@@ -159,14 +159,14 @@ class SQLiteStorage(BaseStorage):
 
     def query_pages(self, where_clause: str = "1=1", params: tuple = ()) -> list:
         """
-        Apufunktio: Kyselee sivuja tietokannasta
+        Helper function: Query pages from database
 
         Args:
-            where_clause: SQL WHERE-ehto (esim. "status = 200")
-            params: Parametrit prepared statementtiin
+            where_clause: SQL WHERE condition (e.g. "status = 200")
+            params: Parameters for prepared statement
 
         Returns:
-            Lista dictionaryja
+            List of dictionaries
         """
         cursor = self.conn.cursor()
         cursor.execute(f'SELECT * FROM pages WHERE {where_clause}', params)

@@ -1,5 +1,5 @@
 """
-Konfiguraation hallinta Tor Crawlerille
+Configuration management for Tor Crawler
 """
 
 import os
@@ -11,44 +11,44 @@ from pathlib import Path
 
 @dataclass
 class TorConfig:
-    """Tor-yhteysasetukset"""
+    """Tor connection settings"""
     proxy_host: str = "127.0.0.1"
     proxy_port: int = 9050
     control_port: int = 9051
     control_password: Optional[str] = None
-    use_stem: bool = False  # Käytetäänkö stem-kirjastoa piirin uusimiseen
+    use_stem: bool = False  # Whether to use stem library for circuit renewal
 
 
 @dataclass
 class CrawlerConfig:
-    """Crawlerin ydinasetukset"""
+    """Core crawler settings"""
     start_url: str
     max_depth: int = 3
     max_pages: int = 100
     max_pages_per_domain: int = 50
-    request_delay: float = 2.0  # Sekuntia pyyntöjen välillä
-    request_timeout: int = 30  # Sekuntia
+    request_delay: float = 2.0  # Seconds between requests
+    request_timeout: int = 30  # Seconds
     user_agent: str = "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0"
-    follow_external_onion: bool = True  # Seurataanko muita .onion-domaineja
-    allowed_domains: List[str] = field(default_factory=list)  # Tyhjä = kaikki .onion
+    follow_external_onion: bool = True  # Whether to follow other .onion domains
+    allowed_domains: List[str] = field(default_factory=list)  # Empty = all .onion
     max_retries: int = 3
     obey_robots_txt: bool = True
 
 
 @dataclass
 class StorageConfig:
-    """Tallennusasetukset"""
-    storage_type: str = "json"  # "json" tai "sqlite"
+    """Storage settings"""
+    storage_type: str = "json"  # "json" or "sqlite"
     output_dir: str = "./data"
     json_filename: str = "crawled_pages.json"
     sqlite_filename: str = "crawler.db"
-    save_html_content: bool = False  # Tallennetaanko koko HTML
-    max_content_length: int = 1000  # Maksimimerkkimäärä tallennetulle sisällölle
+    save_html_content: bool = False  # Whether to save full HTML
+    max_content_length: int = 1000  # Maximum characters for stored content
 
 
 @dataclass
 class Config:
-    """Pääkonfiguraatio-objekti"""
+    """Main configuration object"""
     tor: TorConfig
     crawler: CrawlerConfig
     storage: StorageConfig
@@ -56,11 +56,11 @@ class Config:
 
     @classmethod
     def from_yaml(cls, yaml_path: str) -> "Config":
-        """Lataa konfiguraatio YAML-tiedostosta"""
+        """Load configuration from YAML file"""
         with open(yaml_path, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f)
 
-        # Ohita ympäristömuuttujilla (ENV-prioriteetti)
+        # Override with environment variables (ENV priority)
         tor_config = TorConfig(
             proxy_host=os.getenv("TOR_PROXY_HOST", data.get("tor", {}).get("proxy_host", "127.0.0.1")),
             proxy_port=int(os.getenv("TOR_PROXY_PORT", data.get("tor", {}).get("proxy_port", 9050))),
@@ -102,28 +102,28 @@ class Config:
         )
 
     def validate(self) -> bool:
-        """Validoi konfiguraatio"""
+        """Validate configuration"""
         errors = []
 
         if not self.crawler.start_url:
-            errors.append("start_url ei voi olla tyhjä")
+            errors.append("start_url cannot be empty")
 
         if not self.crawler.start_url.endswith(".onion") and ".onion" not in self.crawler.start_url:
-            errors.append("start_url täytyy olla .onion-osoite")
+            errors.append("start_url must be a .onion address")
 
         if self.crawler.max_depth < 1:
-            errors.append("max_depth täytyy olla vähintään 1")
+            errors.append("max_depth must be at least 1")
 
         if self.crawler.max_pages < 1:
-            errors.append("max_pages täytyy olla vähintään 1")
+            errors.append("max_pages must be at least 1")
 
         if self.crawler.request_delay < 0:
-            errors.append("request_delay ei voi olla negatiivinen")
+            errors.append("request_delay cannot be negative")
 
         if self.storage.storage_type not in ["json", "sqlite"]:
-            errors.append("storage_type täytyy olla 'json' tai 'sqlite'")
+            errors.append("storage_type must be 'json' or 'sqlite'")
 
         if errors:
-            raise ValueError(f"Konfiguraatiovirheet:\n" + "\n".join(f"  - {e}" for e in errors))
+            raise ValueError(f"Configuration errors:\n" + "\n".join(f"  - {e}" for e in errors))
 
         return True
