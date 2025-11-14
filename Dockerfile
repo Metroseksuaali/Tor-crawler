@@ -35,5 +35,5 @@ ENV PYTHONUNBUFFERED=1
 VOLUME ["/app/data"]
 
 # Use custom entrypoint
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["--config", "config.yaml"]
